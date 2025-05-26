@@ -1,6 +1,6 @@
 # FCGames
 
-**Nome em Inglês:** Fiap Cloud Games
+**Nome em Inglês:** Fiap Cloud Games  
 **Nome em Português:** Fiap Jogos na nuvem
 
 ## Integrantes do Grupo 127
