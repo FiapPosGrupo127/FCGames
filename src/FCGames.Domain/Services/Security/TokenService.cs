@@ -16,7 +16,7 @@ public class TokenService(IOptions<TokenConfiguration> options, IMemoryCache cac
 
     public string GenerateToken(User user, bool force = false)
     {
-        if (_cache.TryGetValue(user.Id, out string token) && force == false)
+        if (_cache.TryGetValue(user.Id, out string? token) && token is not null && force == false)
             return token;
         else
             _cache.Remove(user.Id);
@@ -47,8 +47,8 @@ public class TokenService(IOptions<TokenConfiguration> options, IMemoryCache cac
             Subject = new ClaimsIdentity(
             [
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.Name ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                 new Claim(ClaimTypes.Role, ((int)user.AccessLevel).ToString())
             ]),
             Expires = DateTime.UtcNow.AddHours(_configuration.ExpirationTimeHour),

@@ -25,7 +25,7 @@ public class UserService(IUserRepository userRepository, UserData userData) : Ba
         return await base.Add(entity);
     }
 
-    public async Task<User> GetByEmail(string email)
+    public async Task<User> GetByEmail(string? email)
     {
         return await _userRepository.GetByEmail(email);
     }

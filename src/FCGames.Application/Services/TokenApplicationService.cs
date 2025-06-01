@@ -23,7 +23,7 @@ public class TokenApplicationService(IUserService userService, ITokenService tok
         return _tokenService.GenerateToken(user);
     }
 
-    public async Task<string> GetTokenByAutorization(string email)
+    public async Task<string> GetTokenByAutorization(string? email)
     {
         var user = await _userService.GetByEmail(email);
 

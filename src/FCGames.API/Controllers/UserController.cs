@@ -23,14 +23,7 @@ public class UserController(ILogger<UserController> logger, IUserApplicationServ
     [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
     public async Task<object> Create([FromBody] GuestUser user)
     {
-        try
-        {
-            var entity = await _userApplicationService.Add(user);
-            return Ok(entity);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var entity = await _userApplicationService.Add(user);
+        return Ok(entity);
     }
 }

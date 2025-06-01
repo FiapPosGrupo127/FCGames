@@ -4,8 +4,8 @@ namespace FCGames.Domain.Entities;
 
 public class UserData : BaseEntity
 {
-    public string Email { get; set; }
-    public string Name { get; set; }
+    public string? Email { get; set; }
+    public string? Name { get; set; }
 
     public void Set(UserData userData)
     {
@@ -18,14 +18,14 @@ public class UserData : BaseEntity
     {
         var id = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         Id = string.IsNullOrEmpty(id) ? Guid.Empty : Guid.Parse(id);
-        Email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-        Name = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+        Email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value ?? string.Empty;
+        Name = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? string.Empty;
     }
 
     public void Set(User user)
     {
         Id = user.Id;
-        Email = user.Email;
-        Name = user.Name;
+        Email = user.Email ?? string.Empty;
+        Name = user.Name ?? string.Empty;
     }
 }

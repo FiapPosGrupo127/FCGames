@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using FCGames.API.Filters;
 using FCGames.API.Logs;
+using FCGames.API.Middlewares;
 using FCGames.Application.Authorization;
 using FCGames.Application.Dto;
 using FCGames.Application.Interfaces;
@@ -21,7 +22,6 @@ using FCGames.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -196,6 +196,8 @@ using (var scope = app.Services.CreateScope())
 
     context.Database.Migrate();
 }
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

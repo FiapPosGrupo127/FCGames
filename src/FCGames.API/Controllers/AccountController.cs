@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using FCGames.API.Filters;
 using FCGames.Application.Dto;
 using FCGames.Application.Interfaces;
@@ -26,18 +22,11 @@ public class AccountController(ILogger<AccountController> logger, ITokenApplicat
     [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
     public async Task<object> GetToken([FromBody] UserLogin userLogin)
     {
-        try
-        {
-            var token = await _tokenApplicationService.GetToken(userLogin);
+        var token = await _tokenApplicationService.GetToken(userLogin);
 
-            if (string.IsNullOrEmpty(token))
-                return Unauthorized();
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized();
 
-            return Ok(token);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        return Ok(token);
     }
 }
