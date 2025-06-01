@@ -44,13 +44,13 @@ public class TokenService(IOptions<TokenConfiguration> options, IMemoryCache cac
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new List<Claim>
-            {
+            Subject = new ClaimsIdentity(
+            [
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, ((int)user.AccessLevel).ToString())
-            }),
+            ]),
             Expires = DateTime.UtcNow.AddHours(_configuration.ExpirationTimeHour),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };

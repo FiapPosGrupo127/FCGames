@@ -26,7 +26,7 @@ public class GuestUser
     public string Password { get; set; }
 
     [JsonPropertyName("access_level")]
-    [Required(ErrorMessage = "O campo Level de Permissão é obrigatório.")]
+    [Required(ErrorMessage = "O campo Nivel de Acesso é obrigatório.")]
     public AccessLevel AccessLevel { get; set; }
 
     public GuestUser() : base() { }

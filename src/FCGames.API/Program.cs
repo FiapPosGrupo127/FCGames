@@ -4,6 +4,7 @@ using System.Reflection;
 using FCGames.API.Filters;
 using FCGames.API.Logs;
 using FCGames.Application.Authorization;
+using FCGames.Application.Dto;
 using FCGames.Application.Interfaces;
 using FCGames.Application.Services;
 using FCGames.Domain.Configuration;
@@ -129,7 +130,7 @@ builder.Services.AddAutoMapper((sp, cfg) =>
     cfg.AllowNullDestinationValues = true;
     cfg.AllowNullCollections = true;
     cfg.ConstructServicesUsing(sp.GetService);
-}, Assembly.GetAssembly(typeof(PageModel)));
+}, Assembly.GetAssembly(typeof(BaseModel)));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
