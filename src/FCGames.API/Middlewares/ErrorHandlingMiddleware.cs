@@ -15,6 +15,21 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
         {
             await _next(context);
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Argument exception: {Message}", ex.Message);
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+            var result = JsonSerializer.Serialize(new
+            {
+                error = "Erro de argumento.",
+                details = ex.Message
+            });
+
+            await context.Response.WriteAsync(result);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);

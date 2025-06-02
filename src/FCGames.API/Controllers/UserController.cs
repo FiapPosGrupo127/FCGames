@@ -1,3 +1,4 @@
+using FCGames.API.Filters;
 using FCGames.Application.Dto;
 using FCGames.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,7 @@ public class UserController(ILogger<UserController> logger, IUserApplicationServ
     /// <param name="user">Objeto com as propriedades para criar um novo usuário</param>
     /// <returns>Um objeto do usuário criado</returns>
     [HttpPost]
-    [Authorize(Policy = Policies.Admin)]
+    [SkipUserFilter]
     [Produces("application/json")]
     [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
     public async Task<object> Create([FromBody] GuestUser user)

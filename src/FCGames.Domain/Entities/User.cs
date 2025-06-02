@@ -10,4 +10,6 @@ public class User : BaseEntity
     public AccessLevel AccessLevel { get; set; }
 
     public User() : base() { }
+
+    public void SetDefaultUser() => AccessLevel = AccessLevel.User;
 }

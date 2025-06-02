@@ -18,8 +18,9 @@ public class UserService(IUserRepository userRepository, UserData userData) : Ba
         var user = await _userRepository.GetByEmail(entity.Email);
 
         if (user != null)
-            throw new Exception("O usuário já existe.");
+            throw new ArgumentException("O usuário já existe.");
 
+        entity.SetDefaultUser();
         entity.PrepareToInsert(_userData.Id);
         
         return await base.Add(entity);

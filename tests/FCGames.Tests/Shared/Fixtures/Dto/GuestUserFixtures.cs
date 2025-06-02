@@ -13,8 +13,7 @@ public sealed class GuestUserFixtures : BaseFixtures<GuestUser>
         var faker = Faker
             .RuleFor(u => u.Name, f => f.Person.FullName)
             .RuleFor(u => u.Email, f => f.Person.Email)
-            .RuleFor(u => u.Password, f => f.Internet.Password(9) + "#" + 1)
-            .RuleFor(u => u.AccessLevel, f => f.PickRandom<AccessLevel>());
+            .RuleFor(u => u.Password, f => f.Internet.Password(9) + "#" + 1);
 
         return faker.Generate();
     }

@@ -2,7 +2,6 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using FCGames.Domain.Enums;
 
 namespace FCGames.Application.Dto;
 
@@ -24,10 +23,6 @@ public class GuestUser
     [RegularExpression(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$",
         ErrorMessage = "A senha deve ter pelo menos 8 caracteres, incluindo uma letra maiúscula, um número e um caractere especial.")]
     public string? Password { get; set; }
-
-    [JsonPropertyName("access_level")]
-    [Required(ErrorMessage = "O campo Nivel de Acesso é obrigatório.")]
-    public AccessLevel AccessLevel { get; set; }
 
     public GuestUser() : base() { }
 }
