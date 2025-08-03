@@ -28,6 +28,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Prometheus;
 using static FCGames.API.Constants.AppConstants;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -181,6 +182,10 @@ builder.Services.AddScoped(x => new UserData());
 #endregion
 
 var app = builder.Build();
+
+app.UseHealthChecks("/health");
+app.UseHttpMetrics();
+app.MapMetrics();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

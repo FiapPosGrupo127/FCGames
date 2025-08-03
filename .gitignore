@@ -8,8 +8,9 @@
 *.userosscache
 *.sln.docstates
 
-# Visual Studio temporary files
+# Pastas do Visual Studio
 .vs/
+.vscode/
 
 # Rider
 .idea/
