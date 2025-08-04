@@ -28,6 +28,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Npgsql;
 using Prometheus;
 using static FCGames.API.Constants.AppConstants;
 
@@ -155,11 +156,14 @@ var connectionString = builder.Environment.IsProduction()
 
 if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(connectionString))
 {
-    if (!connectionString.Contains("sslmode"))
+    var builderNpgsql = new NpgsqlConnectionStringBuilder(connectionString)
     {
-        connectionString += "?sslmode=require";
-    }
+        SslMode = SslMode.Require
+    };
+    connectionString = builderNpgsql.ConnectionString;
 }
+
+Console.WriteLine($"Final connection string with SSL: {connectionString}");
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
 {
