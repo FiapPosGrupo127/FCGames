@@ -143,6 +143,10 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderCon
     LogLevel = LogLevel.Information
 }));
 
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(databaseUrl)}");
+Console.WriteLine($"DATABASE_URL length: {databaseUrl?.Length ?? 0}");
+
 var connectionString = builder.Environment.IsProduction()
     ? Environment.GetEnvironmentVariable("DATABASE_URL")
     : builder.Configuration.GetConnectionString("DefaultConnection");
