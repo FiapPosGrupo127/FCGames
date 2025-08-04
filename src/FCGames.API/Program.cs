@@ -162,7 +162,7 @@ if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(connectionString
     var builderDb = new NpgsqlConnectionStringBuilder
     {
         Host = databaseUri.Host,
-        Port = databaseUri.Port,
+        Port = databaseUri.IsDefaultPort ? 5432 : databaseUri.Port,
         Username = userInfo[0],
         Password = userInfo[1],
         Database = databaseUri.AbsolutePath.Trim('/'),
