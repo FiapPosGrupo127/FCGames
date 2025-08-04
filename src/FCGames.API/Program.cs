@@ -156,8 +156,20 @@ var connectionString = builder.Environment.IsProduction()
 
 if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(connectionString))
 {
-    if (!connectionString.Contains("sslmode="))
-        connectionString += connectionString.Contains("?") ? "&sslmode=require" : "?sslmode=require";
+    var databaseUri = new Uri(connectionString);
+    var userInfo = databaseUri.UserInfo.Split(':');
+
+    var builderDb = new NpgsqlConnectionStringBuilder
+    {
+        Host = databaseUri.Host,
+        Port = databaseUri.Port,
+        Username = userInfo[0],
+        Password = userInfo[1],
+        Database = databaseUri.AbsolutePath.Trim('/'),
+        SslMode = SslMode.Require
+    };
+
+    connectionString = builderDb.ToString();
 }
 
 Console.WriteLine($"Final connection string with SSL: {connectionString}");
