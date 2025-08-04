@@ -153,6 +153,14 @@ var connectionString = builder.Environment.IsProduction()
     ? Environment.GetEnvironmentVariable("DATABASE_URL")
     : builder.Configuration.GetConnectionString("DefaultConnection");
 
+if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(connectionString))
+{
+    if (!connectionString.Contains("sslmode"))
+    {
+        connectionString += "?sslmode=require";
+    }
+}
+
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
 {
     if (builder.Environment.IsProduction())
