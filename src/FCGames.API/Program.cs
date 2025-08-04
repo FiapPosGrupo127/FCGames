@@ -126,12 +126,16 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddAutoMapper((sp, cfg) =>
 {
     cfg.AllowNullDestinationValues = true;
     cfg.AllowNullCollections = true;
     cfg.ConstructServicesUsing(sp.GetService);
 }, Assembly.GetAssembly(typeof(BaseModel)));
+
+
 
 builder.Logging.ClearProviders();
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
