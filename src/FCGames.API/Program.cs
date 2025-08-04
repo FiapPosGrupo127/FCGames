@@ -147,6 +147,8 @@ var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(databaseUrl)}");
 Console.WriteLine($"DATABASE_URL length: {databaseUrl?.Length ?? 0}");
 
+Console.WriteLine($"Full DATABASE_URL: {databaseUrl}");
+
 var connectionString = builder.Environment.IsProduction()
     ? Environment.GetEnvironmentVariable("DATABASE_URL")
     : builder.Configuration.GetConnectionString("DefaultConnection");
@@ -155,12 +157,12 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 {
     if (builder.Environment.IsProduction())
     {
-        // PostgreSQL para produção (Render)
+        Console.WriteLine("Using PostgreSQL/Npgsql provider");
         options.UseNpgsql(connectionString);
     }
     else
     {
-        // SQL Server para desenvolvimento local
+        Console.WriteLine("Using SQL Server provider");
         options.UseSqlServer(connectionString);
         options.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
         options.EnableSensitiveDataLogging();
