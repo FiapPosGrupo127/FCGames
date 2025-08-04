@@ -8,20 +8,24 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+
     - name: Restore dependencies
-      run: dotnet restore FCGames/FCGames.csproj
+      run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore FCGames/FCGames.csproj
+      run: dotnet build --no-restore
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -35,4 +39,6 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/FCGames:latest
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/fcgames:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/fcgames:${{ github.sha }}
