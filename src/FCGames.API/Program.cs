@@ -234,19 +234,34 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDBContext>();
 
-        if (context.Database.CanConnect())
+        logger.LogInformation("Testing database connection...");
+        Console.WriteLine("About to test database connection...");
+
+        // Teste mais detalhado
+        using var connection = context.Database.GetDbConnection();
+        Console.WriteLine($"Connection type: {connection.GetType().Name}");
+        Console.WriteLine($"Connection string: {connection.ConnectionString}");
+
+        await connection.OpenAsync();
+        Console.WriteLine("Connection opened successfully!");
+
+        var canConnect = await context.Database.CanConnectAsync();
+        Console.WriteLine($"Can connect to database: {canConnect}");
+
+        if (canConnect)
         {
-            context.Database.Migrate();
-            logger.LogInformation("Database migration completed successfully.");
+            logger.LogInformation("Database connection successful. Applying migrations...");
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Migrations applied successfully.");
         }
-        else
-        {
-            logger.LogWarning("Cannot connect to database. Skipping migration.");
-        }
+
+        await connection.CloseAsync();
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        logger.LogError(ex, "Database operation failed: {Message}", ex.Message);
+        Console.WriteLine($"Database error: {ex.Message}");
+        Console.WriteLine($"Inner exception: {ex.InnerException?.Message}");
 
         if (!app.Environment.IsProduction())
         {
