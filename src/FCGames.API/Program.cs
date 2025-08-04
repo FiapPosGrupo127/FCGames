@@ -143,11 +143,24 @@ builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderCon
     LogLevel = LogLevel.Information
 }));
 
+var connectionString = builder.Environment.IsProduction()
+    ? Environment.GetEnvironmentVariable("DATABASE_URL")
+    : builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    options.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
-    options.EnableSensitiveDataLogging();
+    if (builder.Environment.IsProduction())
+    {
+        // PostgreSQL para produção (Render)
+        options.UseNpgsql(connectionString);
+    }
+    else
+    {
+        // SQL Server para desenvolvimento local
+        options.UseSqlServer(connectionString);
+        options.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
+        options.EnableSensitiveDataLogging();
+    }
 });
 
 builder.Services.AddMemoryCache();
@@ -201,9 +214,31 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ApplicationDBContext>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
 
-    context.Database.Migrate();
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDBContext>();
+
+        if (context.Database.CanConnect())
+        {
+            context.Database.Migrate();
+            logger.LogInformation("Database migration completed successfully.");
+        }
+        else
+        {
+            logger.LogWarning("Cannot connect to database. Skipping migration.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database.");
+
+        if (!app.Environment.IsProduction())
+        {
+            throw;
+        }
+    }
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
