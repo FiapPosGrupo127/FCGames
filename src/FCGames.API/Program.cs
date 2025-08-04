@@ -156,9 +156,8 @@ var connectionString = builder.Environment.IsProduction()
 
 if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(connectionString))
 {
-    var uri = new Uri(connectionString);
-    var npgsqlConnectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={uri.UserInfo.Split(':')[0]};Password={uri.UserInfo.Split(':')[1]};SSL Mode=Require;Trust Server Certificate=true";
-    connectionString = npgsqlConnectionString;
+    if (!connectionString.Contains("sslmode="))
+        connectionString += connectionString.Contains("?") ? "&sslmode=require" : "?sslmode=require";
 }
 
 Console.WriteLine($"Final connection string with SSL: {connectionString}");
