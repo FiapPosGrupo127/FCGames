@@ -21,13 +21,30 @@ public class ApplicationDBContext : DbContext
 
     private string DetectProvider()
     {
-        var connection = Database.GetDbConnection();
-        return connection.GetType().Name switch
+        try
         {
-            "SqlConnection" => "SqlServer",
-            "NpgsqlConnection" => "PostgreSql",
-            _ => "SqlServer" // Default
-        };
+            // Verifica se é um provider relacional antes de tentar acessar a conexão
+            if (Database.IsRelational())
+            {
+                var connection = Database.GetDbConnection();
+                return connection.GetType().Name switch
+                {
+                    "SqlConnection" => "SqlServer",
+                    "NpgsqlConnection" => "PostgreSql",
+                    _ => "SqlServer" // Default
+                };
+            }
+            else
+            {
+                // Para providers não relacionais (como InMemory nos testes)
+                return "InMemory";
+            }
+        }
+        catch
+        {
+            // Fallback em caso de erro
+            return "SqlServer";
+        }
     }
 
     public string GetMigrationsPath()
@@ -36,6 +53,7 @@ public class ApplicationDBContext : DbContext
         {
             "PostgreSql" => "Migrations/PostgreSql",
             "SqlServer" => "Migrations/SqlServer",
+            "InMemory" => "Migrations/InMemory", // Para testes
             _ => "Migrations/SqlServer"
         };
     }
