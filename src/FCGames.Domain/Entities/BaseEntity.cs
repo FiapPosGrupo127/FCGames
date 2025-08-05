@@ -15,20 +15,20 @@ public abstract class BaseEntity : Identifier, IBaseEntity
     public virtual void PrepareToInsert(Guid userId)
     {
         Id = Guid.NewGuid();
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
         CreatedBy = userId;
     }
 
     public virtual void PrepareToUpdate(Guid userId)
     {
-        UpdatedAt = DateTime.Now;
+        UpdatedAt = DateTime.UtcNow;
         UpdatedBy = userId;
     }
 
     public virtual void PrepareToRemove(Guid userId)
     {
         Removed = true;
-        RemovedAt = DateTime.Now;
+        RemovedAt = DateTime.UtcNow;
         RemovedBy = userId;
     }
 }

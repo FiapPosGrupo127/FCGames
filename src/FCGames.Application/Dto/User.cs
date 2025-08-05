@@ -15,7 +15,7 @@ public class User : BaseModel
     public string? Password { get; set; }
 
     [JsonPropertyName("access_level")]
-    public AccessLevel AccessLevel { get; set; }
+    public AccessLevel? AccessLevel { get; set; }
 
     public User() : base() { }
 }

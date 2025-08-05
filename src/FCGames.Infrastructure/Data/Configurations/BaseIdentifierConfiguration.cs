@@ -9,7 +9,9 @@ public abstract class BaseIdentifierConfiguration<TEntity> : IEntityTypeConfigur
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)
     {
         builder.HasKey(e => e.Id);
-        builder.Property<Guid>("Id")
+        
+        // Configuração do tipo Guid que funciona para ambos os providers
+        builder.Property(e => e.Id)
             .ValueGeneratedNever()
             .IsRequired();
     }

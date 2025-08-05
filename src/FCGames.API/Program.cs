@@ -18,6 +18,7 @@ using FCGames.Domain.Services;
 using FCGames.Domain.Services.Security;
 using FCGames.Infrastructure.Data;
 using FCGames.Infrastructure.Data.Repositories;
+using FCGames.Infrastructure.Helpers;
 using FCGames.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -136,57 +137,69 @@ builder.Services.AddAutoMapper((sp, cfg) =>
     cfg.ConstructServicesUsing(sp.GetService);
 }, Assembly.GetAssembly(typeof(BaseModel)));
 
-
-
 builder.Logging.ClearProviders();
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
 {
     LogLevel = LogLevel.Information
 }));
 
-var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-Console.WriteLine($"DATABASE_URL exists: {!string.IsNullOrEmpty(databaseUrl)}");
-Console.WriteLine($"DATABASE_URL length: {databaseUrl?.Length ?? 0}");
-
-Console.WriteLine($"Full DATABASE_URL: {databaseUrl}");
-
-var connectionString = builder.Environment.IsProduction()
-    ? Environment.GetEnvironmentVariable("DATABASE_URL")
-    : builder.Configuration.GetConnectionString("DefaultConnection");
-
-if (builder.Environment.IsProduction() && !string.IsNullOrEmpty(connectionString))
-{
-    var databaseUri = new Uri(connectionString);
-    var userInfo = databaseUri.UserInfo.Split(':');
-
-    var builderDb = new NpgsqlConnectionStringBuilder
-    {
-        Host = databaseUri.Host,
-        Port = databaseUri.IsDefaultPort ? 5432 : databaseUri.Port,
-        Username = userInfo[0],
-        Password = userInfo[1],
-        Database = databaseUri.AbsolutePath.Trim('/'),
-        SslMode = SslMode.Require
-    };
-
-    connectionString = builderDb.ToString();
-}
-
-Console.WriteLine($"Final connection string with SSL: {connectionString}");
-
+// Configuração de banco de dados baseada no provider
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
 {
     if (builder.Environment.IsProduction())
     {
         Console.WriteLine("Using PostgreSQL/Npgsql provider");
-        options.UseNpgsql(connectionString);
+        
+        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+        if (string.IsNullOrEmpty(databaseUrl))
+            throw new InvalidOperationException("DATABASE_URL não está configurada.");
+
+        var databaseUri = new Uri(databaseUrl);
+        var userInfo = databaseUri.UserInfo.Split(':');
+
+        var builderDb = new NpgsqlConnectionStringBuilder
+        {
+            Host = databaseUri.Host,
+            Port = databaseUri.IsDefaultPort ? 5432 : databaseUri.Port,
+            Username = userInfo[0],
+            Password = userInfo[1],
+            Database = databaseUri.AbsolutePath.Trim('/'),
+            SslMode = SslMode.Require
+        };
+
+        options.UseNpgsql(builderDb.ToString(), x => 
+        {
+            x.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+            x.MigrationsAssembly("FCGames.Infrastructure");
+        });
     }
     else
     {
-        Console.WriteLine("Using SQL Server provider");
-        options.UseSqlServer(connectionString);
-        options.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
-        options.EnableSensitiveDataLogging();
+        var provider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
+        Console.WriteLine($"Using {provider} provider");
+        
+        if (provider == "PostgreSql")
+        {
+            var connectionString = builder.Configuration.GetConnectionString("PostgreSql");
+            options.UseNpgsql(connectionString, x => 
+            {
+                x.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+                x.MigrationsAssembly("FCGames.Infrastructure");
+            });
+            options.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
+            options.EnableSensitiveDataLogging();
+        }
+        else
+        {
+            var connectionString = builder.Configuration.GetConnectionString("SqlServer");
+            options.UseSqlServer(connectionString, x => 
+            {
+                x.MigrationsHistoryTable("__EFMigrationsHistory", "dbo");
+                x.MigrationsAssembly("FCGames.Infrastructure");
+            });
+            options.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
+            options.EnableSensitiveDataLogging();
+        }
     }
 });
 
@@ -246,35 +259,16 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDBContext>();
-
-        logger.LogInformation("Testing database connection...");
-        Console.WriteLine("About to test database connection...");
-
-        // Teste mais detalhado
-        using var connection = context.Database.GetDbConnection();
-        Console.WriteLine($"Connection type: {connection.GetType().Name}");
-        Console.WriteLine($"Connection string: {connection.ConnectionString}");
-
-        await connection.OpenAsync();
-        Console.WriteLine("Connection opened successfully!");
-
-        var canConnect = await context.Database.CanConnectAsync();
-        Console.WriteLine($"Can connect to database: {canConnect}");
-
-        if (canConnect)
-        {
-            logger.LogInformation("Database connection successful. Applying migrations...");
-            await context.Database.MigrateAsync();
-            logger.LogInformation("Migrations applied successfully.");
-        }
-
-        await connection.CloseAsync();
+        
+        logger.LogInformation("Iniciando processo de migração do banco de dados...");
+        await MigrationHelper.RunMigrationsAsync(context);
+        logger.LogInformation("Migrações aplicadas com sucesso!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Database operation failed: {Message}", ex.Message);
-        Console.WriteLine($"Database error: {ex.Message}");
-        Console.WriteLine($"Inner exception: {ex.InnerException?.Message}");
+        logger.LogError(ex, "Falha na operação do banco de dados: {Message}", ex.Message);
+        Console.WriteLine($"Erro no banco: {ex.Message}");
+        Console.WriteLine($"Exceção interna: {ex.InnerException?.Message}");
 
         if (!app.Environment.IsProduction())
         {
