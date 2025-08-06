@@ -3,6 +3,7 @@ version: '3.8'
 services:
   app:
     image: fcgames:latest
+    container_name: API
     build:
       context: .
       dockerfile: Dockerfile

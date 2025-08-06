@@ -45,7 +45,8 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
                 })
                 : JsonSerializer.Serialize(new
                 {
-                    error = "Ocorreu um erro inesperado."
+                    error = "Ocorreu um erro inesperado.",
+                    details = ex.Message
                 });
 
             await context.Response.WriteAsync(result);
