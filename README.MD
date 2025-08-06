@@ -1,6 +1,6 @@
 # FCGames
 
-**Nome em Inglês:** Fiap Cloud Games  
+**Nome em Inglês:** Fiap Cloud Games
 **Nome em Português:** Fiap Jogos na nuvem
 
 ## Integrantes do Grupo 127
@@ -90,48 +90,6 @@ docker-compose up -d
 # Prometheus: http://localhost:9090
 ```
 
-### **Dockerfile**
-
-O projeto inclui um Dockerfile multi-stage otimizado para produção:
-
-**Características do Dockerfile:**
-- **Multi-stage build**: Reduz o tamanho da imagem final
-- **Layer caching**: Copia .csproj primeiro para otimizar rebuild
-- **Minimal runtime**: Usa `aspnet:8.0` em vez de `sdk:8.0` em produção
-- **Security**: Não inclui ferramentas de desenvolvimento na imagem final
-
-```dockerfile
-# Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
-
-# Copia arquivos de projeto (.csproj) primeiro para cache de layers
-COPY src/FCGames.API/*.csproj ./FCGames.API/
-COPY src/FCGames.Application/*.csproj ./FCGames.Application/
-COPY src/FCGames.Domain/*.csproj ./FCGames.Domain/
-COPY src/FCGames.Infrastructure/*.csproj ./FCGames.Infrastructure/
-
-# Restaura dependências (cached se .csproj não mudou)
-RUN dotnet restore ./FCGames.API/FCGames.API.csproj
-
-# Copia código fonte e faz publish
-COPY src/ ./src/
-WORKDIR /app/src/FCGames.API
-RUN dotnet publish -c Release -o /app/publish
-
-# Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/publish .
-EXPOSE 7060
-ENTRYPOINT ["dotnet", "FCGames.API.dll"]
-```
-
-**Benefícios do Multi-stage:**
-- **Tamanho**: Imagem final ~263MB vs ~1.2GB com SDK
-- **Segurança**: Sem ferramentas de build em produção
-- **Performance**: Apenas runtime necessário
-
 ### **Docker Compose**
 
 #### **Executar Stack Completa**
@@ -147,60 +105,10 @@ docker-compose up -d
 - **Prometheus**: Métricas na porta `9090`
 - **Grafana**: Dashboards na porta `3000`
 
-#### **Configuração do docker-compose.yml:**
-
-```yaml
-services:
-  api:
-    build: .
-    container_name: API
-    ports:
-      - "7060:7060"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - DatabaseProvider=SqlServer
-    depends_on:
-      - sqlserver
-    networks:
-      - fcgames-network
-      - monitoring
-
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: SqlServerFiap
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=@fiap2025
-    ports:
-      - "1433:1433"
-    networks:
-      - fcgames-network
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - monitoring
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-    networks:
-      - monitoring
-```
-
 ### **Comandos Docker Úteis**
 
 #### **Build da Imagem:**
+
 ```bash
 # Build local
 docker build -t fcgames-api .
@@ -210,47 +118,19 @@ docker build -t usuario/fcgames-api:latest .
 ```
 
 #### **Executar Apenas a API:**
+
 ```bash
 docker run -p 7060:7060 fcgames-api
 ```
 
 #### **Executar com Variáveis de Ambiente:**
+
 ```bash
 docker run -p 7060:7060 \
   -e ASPNETCORE_ENVIRONMENT=Production \
   -e DatabaseProvider=PostgreSql \
   -e DATABASE_URL="sua-connection-string" \
   fcgames-api
-```
-
-#### **Logs dos Containers:**
-```bash
-# Logs da API
-docker logs API
-
-# Logs em tempo real
-docker logs -f API
-
-# Logs do Prometheus
-docker logs prometheus
-
-# Logs do Grafana
-docker logs grafana
-```
-
-#### **Gerenciamento dos Containers:**
-```bash
-# Parar todos os serviços
-docker-compose down
-
-# Parar e remover volumes
-docker-compose down -v
-
-# Rebuild dos containers
-docker-compose up --build -d
-
-# Ver status dos containers
-docker-compose ps
 ```
 
 ### **Monitoramento e Observabilidade**
@@ -263,38 +143,6 @@ docker-compose ps
 - **Métricas**: http://localhost:7060/metrics
 - **Prometheus**: http://localhost:9090
 - **Grafana**: http://localhost:3000
-
-#### **Credenciais Grafana:**
-- **Usuário**: `admin`
-- **Senha**: `admin123`
-
-#### **Configurar Data Source Prometheus no Grafana:**
-1. Acesse Grafana: http://localhost:3000
-2. Vá em Configuration → Data Sources
-3. Adicione Prometheus com URL: `http://prometheus:9090`
-
-### **Suporte Multi-Provider Database**
-
-O projeto suporta múltiplos provedores de banco:
-
-#### **SQL Server (Padrão):**
-```yaml
-environment:
-  - DatabaseProvider=SqlServer
-```
-
-#### **PostgreSQL:**
-```yaml
-environment:
-  - DatabaseProvider=PostgreSql
-  - DATABASE_URL=postgresql://user:pass@host:5432/db
-```
-
-#### **InMemory (Testes):**
-```yaml
-environment:
-  - DatabaseProvider=InMemory
-```
 
 #### **Deploy em Produção**
 
@@ -313,6 +161,7 @@ docker run -p 7060:7060 dinosauloo/fcgames-api:latest
 **Link da imagem:** https://hub.docker.com/r/dinosauloo/fcgames-api
 
 #### **Usando Docker Hub:**
+
 ```bash
 # Push para Docker Hub
 docker tag fcgames-api usuario/fcgames-api:v1.0.0
@@ -324,6 +173,7 @@ docker run -d -p 7060:7060 usuario/fcgames-api:v1.0.0
 ```
 
 #### **Usando Docker Compose em Produção:**
+
 ```bash
 # Definir ambiente de produção
 export ASPNETCORE_ENVIRONMENT=Production
@@ -331,70 +181,6 @@ export DATABASE_URL="sua-connection-string-producao"
 
 # Deploy
 docker-compose -f docker-compose.yml up -d
-```
-
-### **Troubleshooting Docker**
-
-#### **Problemas Comuns:**
-
-**1. Porta já está em uso:**
-```bash
-# Verificar processos usando a porta
-netstat -ano | findstr :7060
-
-# Parar container específico
-docker stop API
-```
-
-**2. Erro de conexão com banco:**
-```bash
-# Verificar se SQL Server está rodando
-docker ps | grep SqlServerFiap
-
-# Verificar logs do banco
-docker logs SqlServerFiap
-```
-
-**3. Prometheus não conecta com a API:**
-```bash
-# Verificar rede Docker
-docker network ls
-docker network inspect fcgames_monitoring
-
-# Verificar configuração do Prometheus
-docker exec prometheus cat /etc/prometheus/prometheus.yml
-```
-
-**4. Grafana não conecta com Prometheus:**
-- Use URL: `http://prometheus:9090` (não localhost)
-- Verifique se ambos estão na mesma rede Docker
-
-**5. Limpar ambiente Docker:**
-```bash
-# Remover containers parados
-docker container prune
-
-# Remover imagens não utilizadas
-docker image prune
-
-# Limpar tudo (cuidado!)
-docker system prune -a
-```
-
-#### **Verificações de Saúde:**
-
-```bash
-# Status de todos os serviços
-docker-compose ps
-
-# Health check da API
-curl http://localhost:7060/health
-
-# Verificar métricas
-curl http://localhost:7060/metrics
-
-# Testar conectividade Prometheus
-curl http://localhost:9090/api/v1/targets
 ```
 
 ## Contribuição
